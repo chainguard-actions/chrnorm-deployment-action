@@ -1,4 +1,4 @@
-name: Test basic deployment action usage
+name: Test deployment action with full inputs
 on:
   workflow_dispatch:
 jobs:
@@ -11,12 +11,18 @@ jobs:
         continue-on-error: true
         with:
           token: fake-token-for-testing
-          environment: staging
-          initial-status: pending
-          task: deploy
-          auto-merge: 'false'
-          auto-inactive: 'true'
-          transient-environment: 'false'
+          repo: my-repo
+          owner: my-owner
+          ref: refs/heads/main
+          sha: abc1234567890abcdef1234567890abcdef12345
+          description: 'Test deployment description'
+          log-url: 'https://example.com/logs'
+          environment: production
+          environment-url: 'https://example.com'
+          payload: '{"key":"value"}'
+          required-contexts: ''
+          production-environment: 'true'
+          github-base-url: 'https://api.github.com'
       - name: Assert action ran (may fail due to fake token)
         run: |
           echo "outcome: ${{ steps.action.outcome }}"
