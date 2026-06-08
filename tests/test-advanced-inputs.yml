@@ -1,0 +1,65 @@
+name: Test advanced deployment inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Get current repo info
+        id: repo-info
+        run: |
+          echo "owner=$(echo '${{ github.repository }}' | cut -d'/' -f1)" >> $GITHUB_OUTPUT
+          echo "repo=$(echo '${{ github.repository }}' | cut -d'/' -f2)" >> $GITHUB_OUTPUT
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+      - id: action
+        uses: .
+        with:
+          token: ${{ github.token }}
+          repo: ${{ steps.repo-info.outputs.repo }}
+          owner: ${{ steps.repo-info.outputs.owner }}
+          ref: main
+          sha: ${{ steps.repo-info.outputs.sha }}
+          environment: preview
+          description: 'Test deployment from act workflow'
+          log-url: 'https://example.com/logs/1'
+          environment-url: 'https://example.com/preview'
+          payload: '{"version":"1.0.0","triggered_by":"act"}'
+          required-contexts: ''
+          production-environment: 'false'
+          transient-environment: 'true'
+          initial-status: in_progress
+          github-base-url: 'https://api.github.com'
+      - name: Assert deployment_id is set
+        env:
+          DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
+        run: |
+          echo "deployment_id: $DEPLOYMENT_ID"
+          if [ -z "$DEPLOYMENT_ID" ]; then
+            echo "FAIL: deployment_id output is empty"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert deployment_url is set
+        env:
+          DEPLOYMENT_URL: ${{ steps.action.outputs.deployment_url }}
+        run: |
+          echo "deployment_url: $DEPLOYMENT_URL"
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo "FAIL: deployment_url output is empty"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert environment_url is set
+        env:
+          ENV_URL: ${{ steps.action.outputs.environment_url }}
+        run: |
+          echo "environment_url: $ENV_URL"
+          if [ -z "$ENV_URL" ]; then
+            echo "FAIL: environment_url output is empty"
+            exit 1
+          fi
+          echo "PASS"
