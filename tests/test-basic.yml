@@ -14,8 +14,8 @@ jobs:
           initial-status: pending
           task: deploy
           auto-merge: 'false'
-          transient-environment: 'false'
           auto-inactive: 'true'
+          transient-environment: 'false'
       - name: Assert deployment_id is set
         env:
           DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}

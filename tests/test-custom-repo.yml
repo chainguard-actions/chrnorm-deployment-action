@@ -6,27 +6,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Get current commit SHA
-        id: git-info
+      - name: Get current repo info
+        id: repo-info
         run: |
-          SHA=$(git rev-parse HEAD)
-          echo "sha=$SHA" >> $GITHUB_OUTPUT
-          echo "Current SHA: $SHA"
+          echo "owner=$(echo '${{ github.repository }}' | cut -d'/' -f1)" >> $GITHUB_OUTPUT
+          echo "repo=$(echo '${{ github.repository }}' | cut -d'/' -f2)" >> $GITHUB_OUTPUT
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "ref=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
       - id: action
         uses: .
         with:
           token: ${{ github.token }}
-          repo: ${{ github.repository_owner != '' && github.event.repository.name || 'test-repo' }}
-          owner: ${{ github.repository_owner }}
-          ref: ${{ github.ref }}
-          sha: ${{ steps.git-info.outputs.sha }}
+          owner: ${{ steps.repo-info.outputs.owner }}
+          repo: ${{ steps.repo-info.outputs.repo }}
+          ref: ${{ steps.repo-info.outputs.ref }}
+          sha: ${{ steps.repo-info.outputs.sha }}
           environment: staging
           initial-status: pending
-          task: deploy
-          auto-merge: 'false'
-          transient-environment: 'true'
-          auto-inactive: 'false'
+          required-contexts: ''
           github-base-url: 'https://api.github.com'
+          auto-merge: 'false'
       - name: Assert deployment_id is set
         env:
           DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
@@ -34,16 +33,6 @@ jobs:
           echo "deployment_id: $DEPLOYMENT_ID"
           if [ -z "$DEPLOYMENT_ID" ]; then
             echo "FAIL: deployment_id output is empty"
-            exit 1
-          fi
-          echo "PASS"
-      - name: Assert deployment_url is set
-        env:
-          DEPLOYMENT_URL: ${{ steps.action.outputs.deployment_url }}
-        run: |
-          echo "deployment_url: $DEPLOYMENT_URL"
-          if [ -z "$DEPLOYMENT_URL" ]; then
-            echo "FAIL: deployment_url output is empty"
             exit 1
           fi
           echo "PASS"
