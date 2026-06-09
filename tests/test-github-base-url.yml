@@ -1,9 +1,12 @@
-name: Test basic deployment creation
+name: Test github-base-url input
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - id: action
@@ -12,9 +15,9 @@ jobs:
           token: ${{ github.token }}
           environment: staging
           initial-status: pending
-          description: "Test deployment from basic test"
-          log-url: "https://example.com/logs"
-          environment-url: "https://example.com"
+          github-base-url: "https://api.github.com"
+          required-contexts: ""
+          auto-merge: "false"
       - name: Assert deployment_id is set
         env:
           DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
@@ -32,16 +35,6 @@ jobs:
           echo "deployment_url: $DEPLOYMENT_URL"
           if [ -z "$DEPLOYMENT_URL" ]; then
             echo "FAIL: deployment_url output is empty"
-            exit 1
-          fi
-          echo "PASS"
-      - name: Assert environment_url is set
-        env:
-          ENVIRONMENT_URL: ${{ steps.action.outputs.environment_url }}
-        run: |
-          echo "environment_url: $ENVIRONMENT_URL"
-          if [ -z "$ENVIRONMENT_URL" ]; then
-            echo "FAIL: environment_url output is empty"
             exit 1
           fi
           echo "PASS"

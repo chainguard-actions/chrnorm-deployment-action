@@ -4,32 +4,45 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - id: action
         uses: .
-        continue-on-error: true
         with:
           token: ${{ github.token }}
-          repo: my-repo
-          owner: my-org
-          ref: refs/heads/main
-          sha: abc1234567890abcdef1234567890abcdef12345
-          required-contexts: ""
-          payload: '{"key":"value","version":1}'
+          repo: ${{ github.event.repository.name }}
+          owner: ${{ github.repository_owner }}
+          ref: main
+          sha: ${{ github.sha }}
           environment: production
+          initial-status: queued
+          required-contexts: ""
+          payload: '{"key":"value","test":true}'
           production-environment: "true"
-          task: deploy
           auto-merge: "false"
           transient-environment: "false"
+          task: deploy
           auto-inactive: "true"
-      - name: Assert step ran
+      - name: Assert deployment_id is set
         env:
-          OUTCOME: ${{ steps.action.outcome }}
+          DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
         run: |
-          echo "outcome: $OUTCOME"
-          if [ "$OUTCOME" = "skipped" ]; then
-            echo "FAIL: action was skipped unexpectedly"
+          echo "deployment_id: $DEPLOYMENT_ID"
+          if [ -z "$DEPLOYMENT_ID" ]; then
+            echo "FAIL: deployment_id output is empty"
             exit 1
           fi
-          echo "PASS: action ran (outcome=$OUTCOME)"
+          echo "PASS"
+      - name: Assert deployment_url is set
+        env:
+          DEPLOYMENT_URL: ${{ steps.action.outputs.deployment_url }}
+        run: |
+          echo "deployment_url: $DEPLOYMENT_URL"
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo "FAIL: deployment_url output is empty"
+            exit 1
+          fi
+          echo "PASS"
