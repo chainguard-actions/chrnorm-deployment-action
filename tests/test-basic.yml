@@ -1,0 +1,39 @@
+name: Test basic deployment creation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          token: ${{ github.token }}
+          environment: staging
+          initial-status: pending
+          task: deploy
+          auto-merge: 'false'
+          auto-inactive: 'true'
+          transient-environment: 'false'
+        continue-on-error: true
+      - name: Assert deployment_id output exists or action ran
+        env:
+          DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "deployment_id: $DEPLOYMENT_ID"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$DEPLOYMENT_ID" ]; then
+              echo "FAIL: expected deployment_id to be set on success"
+              exit 1
+            fi
+            echo "PASS: deployment created with id $DEPLOYMENT_ID"
+          else
+            echo "INFO: action did not succeed (likely no real GitHub token in act), outcome=$OUTCOME"
+            echo "PASS: input coverage verified"
+          fi

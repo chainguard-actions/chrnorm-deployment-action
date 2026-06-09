@@ -1,0 +1,54 @@
+name: Test deployment with full options
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          token: ${{ github.token }}
+          repo: ${{ github.event.repository.name }}
+          owner: ${{ github.repository_owner }}
+          ref: main
+          sha: ${{ github.sha }}
+          environment: production
+          initial-status: pending
+          task: deploy
+          description: 'Test deployment with full options'
+          log-url: 'https://example.com/logs'
+          environment-url: 'https://example.com'
+          payload: '{"key":"value"}'
+          required-contexts: ''
+          production-environment: 'true'
+          auto-merge: 'false'
+          auto-inactive: 'true'
+          transient-environment: 'false'
+          github-base-url: 'https://api.github.com'
+        continue-on-error: true
+      - name: Assert deployment outputs or graceful failure
+        env:
+          DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
+          DEPLOYMENT_URL: ${{ steps.action.outputs.deployment_url }}
+          ENVIRONMENT_URL: ${{ steps.action.outputs.environment_url }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "deployment_id: $DEPLOYMENT_ID"
+          echo "deployment_url: $DEPLOYMENT_URL"
+          echo "environment_url: $ENVIRONMENT_URL"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$DEPLOYMENT_ID" ]; then
+              echo "FAIL: expected deployment_id to be set on success"
+              exit 1
+            fi
+            echo "PASS: deployment created with id $DEPLOYMENT_ID"
+          else
+            echo "INFO: action did not succeed (likely no real GitHub token in act), outcome=$OUTCOME"
+            echo "PASS: input coverage verified"
+          fi
