@@ -1,4 +1,4 @@
-name: Test basic deployment creation
+name: Test deployment with full inputs
 on:
   workflow_dispatch:
 jobs:
@@ -11,15 +11,24 @@ jobs:
         continue-on-error: true
         with:
           token: ${{ github.token }}
-          environment: staging
+          repo: ${{ github.event.repository.name }}
+          owner: ${{ github.repository_owner }}
+          ref: main
+          sha: ${{ github.sha }}
+          description: 'Test deployment from CI'
+          log-url: 'https://example.com/logs'
+          environment: production
+          environment-url: 'https://example.com'
           initial-status: pending
           task: deploy
           auto-merge: 'false'
           auto-inactive: 'true'
           transient-environment: 'false'
+          production-environment: 'true'
       - name: Assert action ran
         run: |
           echo "outcome: ${{ steps.action.outcome }}"
           echo "deployment_id: ${{ steps.action.outputs.deployment_id }}"
           echo "deployment_url: ${{ steps.action.outputs.deployment_url }}"
-          echo "PASS: action executed without unexpected error"
+          echo "environment_url: ${{ steps.action.outputs.environment_url }}"
+          echo "PASS: action executed with full inputs"
