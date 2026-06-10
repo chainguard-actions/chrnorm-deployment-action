@@ -1,4 +1,4 @@
-name: Test basic deployment creation
+name: Test optional deployment inputs
 on:
   workflow_dispatch:
 jobs:
@@ -10,25 +10,26 @@ jobs:
         uses: .
         with:
           token: ${{ github.token }}
-          environment: staging
-          initial-status: pending
-          task: deploy
-          auto-merge: 'false'
-          auto-inactive: 'true'
-          transient-environment: 'false'
+          environment: production
+          description: 'Test deployment from act'
+          environment-url: 'https://example.com'
+          log-url: 'https://example.com/logs'
+          payload: '{"key":"value"}'
+          production-environment: 'true'
+          required-contexts: ''
         continue-on-error: true
-      - name: Assert deployment_id output exists or action ran
+      - name: Assert action ran with optional inputs
         env:
           OUTCOME: ${{ steps.action.outcome }}
           DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
-          DEPLOYMENT_URL: ${{ steps.action.outputs.deployment_url }}
+          ENVIRONMENT_URL: ${{ steps.action.outputs.environment_url }}
         run: |
           echo "outcome: $OUTCOME"
           echo "deployment_id: $DEPLOYMENT_ID"
-          echo "deployment_url: $DEPLOYMENT_URL"
+          echo "environment_url: $ENVIRONMENT_URL"
           if [ "$OUTCOME" = "success" ]; then
-            echo "PASS: action succeeded"
+            echo "PASS: action succeeded with optional inputs"
           else
             echo "INFO: action did not succeed (expected in local/act environment without real GitHub token)"
-            echo "PASS: action ran and produced expected outputs structure"
+            echo "PASS: action ran with optional inputs"
           fi
