@@ -1,4 +1,4 @@
-name: Test basic deployment creation
+name: Test advanced deployment inputs
 on:
   workflow_dispatch:
 jobs:
@@ -9,20 +9,29 @@ jobs:
       GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Get current repo info
+        id: repo-info
+        run: |
+          echo "owner=$(echo '${{ github.repository }}' | cut -d'/' -f1)" >> $GITHUB_OUTPUT
+          echo "repo=$(echo '${{ github.repository }}' | cut -d'/' -f2)" >> $GITHUB_OUTPUT
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
       - id: action
         uses: .
         with:
           token: ${{ github.token }}
-          environment: staging
+          owner: ${{ steps.repo-info.outputs.owner }}
+          repo: ${{ steps.repo-info.outputs.repo }}
+          sha: ${{ steps.repo-info.outputs.sha }}
+          environment: production
           initial-status: pending
-          description: "Basic deployment test"
-          log-url: "https://example.com/logs"
-          environment-url: "https://staging.example.com"
-          ref: main
-          task: deploy
-          auto-merge: "false"
+          payload: '{"version":"1.0.0","triggered_by":"test"}'
+          required-contexts: ""
+          production-environment: "true"
           transient-environment: "false"
+          auto-merge: "false"
           auto-inactive: "true"
+          task: deploy
+          github-base-url: "https://api.github.com"
       - name: Assert deployment_id is set
         env:
           DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
@@ -40,16 +49,6 @@ jobs:
           echo "deployment_url: $DEPLOYMENT_URL"
           if [ -z "$DEPLOYMENT_URL" ]; then
             echo "FAIL: deployment_url output is empty"
-            exit 1
-          fi
-          echo "PASS"
-      - name: Assert environment_url is set
-        env:
-          ENVIRONMENT_URL: ${{ steps.action.outputs.environment_url }}
-        run: |
-          echo "environment_url: $ENVIRONMENT_URL"
-          if [ -z "$ENVIRONMENT_URL" ]; then
-            echo "FAIL: environment_url output is empty"
             exit 1
           fi
           echo "PASS"
