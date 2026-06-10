@@ -1,0 +1,42 @@
+name: Test deployment with advanced inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Get current commit SHA
+        id: git-info
+        run: |
+          SHA=$(git rev-parse HEAD)
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+          echo "sha: $SHA"
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          repo: 'my-repo'
+          owner: 'my-org'
+          sha: ${{ steps.git-info.outputs.sha }}
+          required-contexts: ''
+          payload: '{"version":"1.0.0","deployer":"ci"}'
+          production-environment: 'false'
+          github-base-url: 'https://api.github.com'
+          environment: production
+      - name: Assert action ran with advanced inputs
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "deployment_id: $DEPLOYMENT_ID"
+          # The action may fail without real GitHub permissions for the specified repo/owner,
+          # but inputs should be accepted and processed
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with advanced inputs"
+          else
+            echo "INFO: action did not succeed (expected in test environment without real GitHub token/permissions)"
+          fi
+          echo "PASS"

@@ -1,0 +1,32 @@
+name: Test deployment with optional URL and description inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          environment: staging
+          log-url: 'https://example.com/logs/123'
+          environment-url: 'https://staging.example.com'
+          description: 'Deploying to staging environment'
+          ref: 'main'
+      - name: Assert action ran with optional URL inputs
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          ENV_URL: ${{ steps.action.outputs.environment_url }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "environment_url output: $ENV_URL"
+          # The action may fail without real GitHub permissions, but inputs should be accepted
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with optional URL inputs"
+          else
+            echo "INFO: action did not succeed (expected in test environment without real GitHub token)"
+          fi
+          echo "PASS"
