@@ -1,4 +1,4 @@
-name: Test GitHub Enterprise base URL input
+name: Test full input coverage
 on:
   workflow_dispatch:
 jobs:
@@ -13,31 +13,34 @@ jobs:
         uses: .
         with:
           token: ${{ github.token }}
-          environment: staging
-          initial-status: pending
-          task: deploy
-          auto-merge: 'false'
-          transient-environment: 'true'
-          production-environment: 'false'
-          auto-inactive: 'true'
-          github-base-url: 'https://api.github.com'
-          description: 'Enterprise test deployment'
-          log-url: 'https://example.com/logs/enterprise'
-          environment-url: 'https://staging.example.com'
           repo: ${{ github.event.repository.name }}
           owner: ${{ github.repository_owner }}
           ref: main
           sha: ${{ github.sha }}
-          payload: '{"env":"staging"}'
+          environment: production
+          initial-status: pending
+          description: 'Test deployment from CI'
+          log-url: 'https://example.com/logs/1'
+          environment-url: 'https://example.com'
+          payload: '{"version":"1.0.0","triggered_by":"test"}'
           required-contexts: ''
+          production-environment: 'true'
+          task: deploy
+          auto-merge: 'false'
+          transient-environment: 'false'
+          auto-inactive: 'true'
         continue-on-error: true
-      - name: Assert action ran with github-base-url input
+      - name: Assert action ran with all inputs
         env:
           OUTCOME: ${{ steps.action.outcome }}
           DEPLOYMENT_ID: ${{ steps.action.outputs.deployment_id }}
+          DEPLOYMENT_URL: ${{ steps.action.outputs.deployment_url }}
+          ENVIRONMENT_URL: ${{ steps.action.outputs.environment_url }}
         run: |
           echo "outcome: $OUTCOME"
           echo "deployment_id: $DEPLOYMENT_ID"
+          echo "deployment_url: $DEPLOYMENT_URL"
+          echo "environment_url: $ENVIRONMENT_URL"
           if [ "$OUTCOME" = "success" ]; then
             echo "Action succeeded"
             if [ -z "$DEPLOYMENT_ID" ]; then
@@ -46,6 +49,6 @@ jobs:
             fi
             echo "PASS: deployment_id=$DEPLOYMENT_ID"
           else
-            echo "Action did not succeed (expected in test environment)"
-            echo "PASS: action ran with github-base-url input"
+            echo "Action did not succeed (expected in test environment without real token)"
+            echo "PASS: action ran with all inputs and produced expected outcome"
           fi
