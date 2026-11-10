@@ -4,8 +4,13 @@
   "version": "v2.0.8",
   "commit_sha": "500aa6a23c81ffa1acf71072aee3cfa2cc2e556a",
   "url": "https://github.com/chrnorm/deployment-action",
-  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
   "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
-  "test_agent_version": "1",
-  "harden_agent_version": "1"
+  "test_agent_version": "2",
+  "harden_agent_version": "2",
+  "dist_artifact": {
+    "gcs_uri": "gs://patch-actions-node-artifacts/dist-artifacts/chrnorm/deployment-action/v2.0.8/sha256-6a26820281334c677c5a395b1c519c1ece78bd523025bd643b53bad4281a45bb.tar.gz",
+    "sha256": "6a26820281334c677c5a395b1c519c1ece78bd523025bd643b53bad4281a45bb",
+    "size_bytes": 545402
+  }
 }
